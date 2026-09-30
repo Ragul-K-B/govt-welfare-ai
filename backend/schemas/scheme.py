@@ -31,3 +31,13 @@ class Rule(BaseModel):
 class ConditionGroup(BaseModel):
     logic: Logic
     conditions: list[Rule | ConditionGroup]
+    
+class Scheme(BaseModel):
+    scheme_id: str
+    name: str
+    description: str
+    benefits: Any
+    eligibility: ConditionGroup
+    documents: list[str]
+    application: Any
+    sources: list[str]
