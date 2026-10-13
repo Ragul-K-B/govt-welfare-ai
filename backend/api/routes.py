@@ -1,9 +1,7 @@
-
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from services.discovery import discover_schemes
-from services.followup import generate_followup_questions
 from services.conversation import continue_discovery
 
 router = APIRouter(prefix="/api", tags=["Welfare AI"])
@@ -12,6 +10,7 @@ router = APIRouter(prefix="/api", tags=["Welfare AI"])
 class DiscoverRequest(BaseModel):
     message: str = Field(min_length=1)
     top_k: int = Field(default=5, ge=1, le=20)
+    existing_profile: dict = Field(default_factory=dict)
 
 
 class ContinueRequest(BaseModel):
@@ -25,18 +24,11 @@ class ContinueRequest(BaseModel):
 @router.post("/discover")
 def discover(request: DiscoverRequest):
     try:
-        result = discover_schemes(
+        return discover_schemes(
             message=request.message,
-            top_k=request.top_k
+            top_k=request.top_k,
+            existing_profile=request.existing_profile
         )
-
-        questions = generate_followup_questions(
-            evaluated_schemes=result["schemes"],
-            citizen_profile=result["profile"]
-        )
-
-        result["followup_questions"] = questions
-        return result
 
     except Exception as error:
         raise HTTPException(

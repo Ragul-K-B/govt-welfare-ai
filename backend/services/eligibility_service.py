@@ -51,12 +51,14 @@ def get_relevant_missing_attributes(condition, citizen: dict) -> set[str]:
     return {condition.attribute}
 
 
+
 def evaluate_retrieved_schemes(
     retrieved_schemes: list[dict],
     citizen_profile: dict
 ) -> list[dict]:
     """
-    Evaluate FAISS-retrieved schemes using their MongoDB rules.
+    Evaluate FAISS-retrieved schemes using MongoDB rules
+    and return complete scheme details.
     """
 
     scheme_ids = [
@@ -67,9 +69,22 @@ def evaluate_retrieved_schemes(
     if not scheme_ids:
         return []
 
+    # Fetch eligibility rules and scheme details from MongoDB.
+    projection = {
+        "_id": 0,
+        "scheme_id": 1,
+        "name": 1,
+        "description": 1,
+        "benefits": 1,
+        "documents": 1,
+        "application": 1,
+        "sources": 1,
+        "eligibility": 1,
+    }
+
     documents = schemes_collection.find(
         {"scheme_id": {"$in": scheme_ids}},
-        {"_id": 0, "scheme_id": 1, "name": 1, "eligibility": 1}
+        projection
     )
 
     documents_by_id = {
@@ -108,7 +123,12 @@ def evaluate_retrieved_schemes(
 
         results.append({
             "scheme_id": scheme_id,
-            "name": document["name"],
+            "name": document.get("name"),
+            "description": document.get("description"),
+            "benefits": document.get("benefits"),
+            "documents": document.get("documents"),
+            "application": document.get("application"),
+            "sources": document.get("sources"),
             "score": retrieved.get("score"),
             "decision": decision.value,
             "missing_attributes": missing_attributes

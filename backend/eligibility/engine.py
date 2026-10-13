@@ -1,3 +1,4 @@
+
 from enum import Enum
 
 from schemas.scheme import Rule, ConditionGroup
@@ -7,6 +8,13 @@ class Decision(str, Enum):
     PASS = "PASS"
     FAIL = "FAIL"
     UNKNOWN = "UNKNOWN"
+
+
+def normalize_string(value):
+    """Normalize strings for case-insensitive comparison."""
+    if isinstance(value, str):
+        return value.strip().casefold()
+    return value
 
 
 def evaluate_rule(rule: Rule, citizen: dict) -> Decision:
@@ -27,11 +35,23 @@ def evaluate_rule(rule: Rule, citizen: dict) -> Decision:
 
     # EQUALS
     if operator == "EQUALS":
-        result = citizen_value == expected_value
+        if isinstance(citizen_value, str) and isinstance(expected_value, str):
+            result = (
+                normalize_string(citizen_value)
+                == normalize_string(expected_value)
+            )
+        else:
+            result = citizen_value == expected_value
 
     # NOT_EQUALS
     elif operator == "NOT_EQUALS":
-        result = citizen_value != expected_value
+        if isinstance(citizen_value, str) and isinstance(expected_value, str):
+            result = (
+                normalize_string(citizen_value)
+                != normalize_string(expected_value)
+            )
+        else:
+            result = citizen_value != expected_value
 
     # GREATER THAN
     elif operator == ">":
@@ -51,11 +71,23 @@ def evaluate_rule(rule: Rule, citizen: dict) -> Decision:
 
     # IN
     elif operator == "IN":
-        result = citizen_value in expected_value
+        if isinstance(citizen_value, str) and isinstance(expected_value, list):
+            normalized_options = [
+                normalize_string(value) for value in expected_value
+            ]
+            result = normalize_string(citizen_value) in normalized_options
+        else:
+            result = citizen_value in expected_value
 
     # NOT IN
     elif operator == "NOT_IN":
-        result = citizen_value not in expected_value
+        if isinstance(citizen_value, str) and isinstance(expected_value, list):
+            normalized_options = [
+                normalize_string(value) for value in expected_value
+            ]
+            result = normalize_string(citizen_value) not in normalized_options
+        else:
+            result = citizen_value not in expected_value
 
     else:
         raise ValueError(
@@ -71,17 +103,11 @@ def evaluate_rule(rule: Rule, citizen: dict) -> Decision:
 
 def evaluate_condition(condition, citizen: dict) -> Decision:
 
-    # --------------------------------------------------
     # SINGLE RULE
-    # --------------------------------------------------
-
     if isinstance(condition, Rule):
         return evaluate_rule(condition, citizen)
 
-    # --------------------------------------------------
     # CONDITION GROUP
-    # --------------------------------------------------
-
     if isinstance(condition, ConditionGroup):
 
         # Empty groups are invalid
@@ -96,10 +122,7 @@ def evaluate_condition(condition, citizen: dict) -> Decision:
             for item in condition.conditions
         ]
 
-        # --------------------------------------------------
         # AND LOGIC
-        # --------------------------------------------------
-
         if condition.logic.value == "AND":
 
             # One FAIL is enough to make the whole AND fail
@@ -113,10 +136,7 @@ def evaluate_condition(condition, citizen: dict) -> Decision:
             # Everything passed
             return Decision.PASS
 
-        # --------------------------------------------------
         # OR LOGIC
-        # --------------------------------------------------
-
         elif condition.logic.value == "OR":
 
             # One PASS is enough to make the whole OR pass
@@ -135,10 +155,7 @@ def evaluate_condition(condition, citizen: dict) -> Decision:
                 f"Unsupported logic: {condition.logic}"
             )
 
-    # --------------------------------------------------
     # INVALID CONDITION TYPE
-    # --------------------------------------------------
-
     raise TypeError(
         f"Unsupported condition type: {type(condition)}"
     )
