@@ -150,7 +150,11 @@ Allowed statuses: RELEVANT, NOT_RELEVANT, UNCERTAIN.
             "search may be needed."
         )
     else:
-        message = None
+        message = (
+            f"I found {len(relevant_schemes)} relevant scheme(s) "
+            "among the candidates checked. Review the eligibility "
+            "results and answer any follow-up questions below."
+        )
 
     return {
         "relevant_schemes": relevant_schemes,
