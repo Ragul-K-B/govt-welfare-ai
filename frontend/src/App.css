@@ -1304,7 +1304,7 @@ input:focus-visible {
     font-size: 15px;
   }
 }
-}
+
 .scheme-results > .results-note { margin: 0; padding: 0 14px; color: #687c97; font-size: 12px; }
 .scheme-card {
   display: grid; grid-template-columns: 30px minmax(0, 1fr) auto;

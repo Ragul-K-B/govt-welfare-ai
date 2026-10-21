@@ -498,17 +498,27 @@ function App() {
 
       const result = data.result
       const resultSchemes = result?.schemes ?? []
-      const passingSchemes = resultSchemes.filter(
+      const requestedScheme = data.scheme_details?.scheme ?? null
+
+      // A scheme-details intent returns its scheme separately from result.schemes.
+      // Reuse the same scheme-card component so the user can open the existing modal.
+      const displayedSchemes = requestedScheme ? [requestedScheme] : resultSchemes
+
+      const passingSchemes = displayedSchemes.filter(
         (scheme) => String(scheme.decision || '').toUpperCase() === 'PASS',
       )
-      const unknownCandidates = [
-        ...(result?.uncertain_schemes ?? []),
-        ...resultSchemes.filter(
-          (scheme) => String(scheme.decision || '').toUpperCase() === 'UNKNOWN',
-        ),
-      ].filter(
-        (scheme) => String(scheme.decision || 'UNKNOWN').toUpperCase() === 'UNKNOWN',
-      )
+      const unknownCandidates = requestedScheme
+        ? displayedSchemes.filter(
+            (scheme) => String(scheme.decision || 'UNKNOWN').toUpperCase() === 'UNKNOWN',
+          )
+        : [
+            ...(result?.uncertain_schemes ?? []),
+            ...displayedSchemes.filter(
+              (scheme) => String(scheme.decision || '').toUpperCase() === 'UNKNOWN',
+            ),
+          ].filter(
+            (scheme) => String(scheme.decision || 'UNKNOWN').toUpperCase() === 'UNKNOWN',
+          )
       const unknownSchemes = unknownCandidates.filter((scheme, index, all) => {
         const schemeKey = scheme.scheme_id || scheme.name
         return schemeKey
