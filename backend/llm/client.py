@@ -9,7 +9,12 @@ if not settings.GROQ_API_KEY:
 
 
 client = Groq(api_key=settings.GROQ_API_KEY)
-
+print(
+    "Groq key diagnostic:",
+    "present" if settings.GROQ_API_KEY else "missing",
+    "length:",
+    len(settings.GROQ_API_KEY) if settings.GROQ_API_KEY else 0,
+)
 
 def get_llm_response(prompt: str) -> str:
     response = client.chat.completions.create(
