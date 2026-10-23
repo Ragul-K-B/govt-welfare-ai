@@ -5,6 +5,9 @@ import './App.css'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
 const categories = [
   { name: 'Education & Scholarships', icon: '🎓', color: 'education' },
   { name: 'Agriculture & Farmers', icon: '🌱', color: 'agriculture' },
@@ -415,7 +418,7 @@ function App() {
 
       try {
         const response = await fetch(
-          `/api/schemes?search=${encodeURIComponent(searchText)}&limit=50`,
+          `${API_BASE_URL}/api/schemes?search=${encodeURIComponent(searchText)}&limit=50`,
           { method: 'GET', signal: controller.signal },
         )
         const data = await response.json()
@@ -464,7 +467,7 @@ function App() {
     setSelectedCategory(null)
 
     try {
-      const response = await fetch('/api/chat', {
+      const response = await fetch(`${API_BASE_URL}/api/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

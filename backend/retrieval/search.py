@@ -1,9 +1,7 @@
-import json
-from pathlib import Path
 
-import faiss
-import numpy as np
-from sentence_transformers import SentenceTransformer
+import json
+from functools import lru_cache
+from pathlib import Path
 
 
 # --------------------------------------------------
@@ -19,15 +17,22 @@ MAPPING_PATH = DATA_DIR / "scheme_ids.json"
 
 
 # --------------------------------------------------
-# Load resources
+# Lazy-load resources only when search is requested
 # --------------------------------------------------
 
-model = SentenceTransformer(MODEL_NAME)
+@lru_cache(maxsize=1)
+def load_search_resources():
+    import faiss
+    from sentence_transformers import SentenceTransformer
 
-index = faiss.read_index(str(INDEX_PATH))
+    model = SentenceTransformer(MODEL_NAME)
 
-with open(MAPPING_PATH, "r", encoding="utf-8") as file:
-    scheme_ids = json.load(file)
+    index = faiss.read_index(str(INDEX_PATH))
+
+    with open(MAPPING_PATH, "r", encoding="utf-8") as file:
+        scheme_ids = json.load(file)
+
+    return model, index, scheme_ids
 
 
 # --------------------------------------------------
@@ -37,7 +42,13 @@ with open(MAPPING_PATH, "r", encoding="utf-8") as file:
 def search_schemes(query: str, top_k: int = 5):
     """
     Search the FAISS index using a natural-language query.
+    Load the model and index only when the first search is requested.
     """
+
+    import faiss
+    import numpy as np
+
+    model, index, scheme_ids = load_search_resources()
 
     # E5 models use "query:" for search queries
     query_text = f"query: {query}"
