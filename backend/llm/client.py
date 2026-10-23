@@ -36,7 +36,7 @@ def get_llm_response(prompt: str) -> str:
             },
         ],
         temperature=0.2,
-        max_completion_tokens=750,
+        max_completion_tokens=300,
     )
 
     return response.choices[0].message.content or ""
